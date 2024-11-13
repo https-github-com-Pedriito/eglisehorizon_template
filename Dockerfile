@@ -1,24 +1,24 @@
-# Étape 1: Construire l'application
+# Étape de build pour Vite
 FROM node:18 AS build
 
 WORKDIR /app
 
+# Installer les dépendances
 COPY package.json package-lock.json ./
 RUN npm install
 
+# Copier le reste des fichiers et construire l'application
 COPY . .
 RUN npm run build
 
-# Étape 2: Servir l'application avec Nginx
-FROM nginx:alpine
+# Étape finale avec Apache
+FROM httpd:alpine
 
-# Copier le dossier build dans le répertoire public de Nginx
-COPY --from=build /app/dist /usr/share/nginx/html
+# Copier les fichiers de build dans le répertoire par défaut d'Apache
+COPY --from=build /app/dist/ /usr/local/apache2/htdocs/
 
-# Copier la configuration personnalisée de Nginx
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Exposer le port 80
+# Exposer le port 80 pour Apache
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+# Commande de démarrage pour Apache
+CMD ["httpd", "-D", "FOREGROUND"]
